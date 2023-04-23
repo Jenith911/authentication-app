@@ -23,13 +23,11 @@ pipeline {
         }
         stage('Deploy to Test Environment') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nodejs-server-creds', usernameVariable: 'REMOTE_USER', passwordVariable: 'REMOTE_PASS')]) {
-                sh "scp ${ZIP_FILE_NAME} ${REMOTE_USER}@${REMOTE_HOST}:${DEPLOY_DIR}"
                 sshagent(['nodejs-server-key']) {
+                    sh "scp ${ZIP_FILE_NAME} ${REMOTE_USER}@${REMOTE_HOST}:${DEPLOY_DIR}"
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} 'cd ${DEPLOY_DIR} && unzip -o ${ZIP_FILE_NAME} && npm install && npm start &'"
                 }
             }
-        }
         }
         post {
             always {
