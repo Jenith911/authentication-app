@@ -28,13 +28,13 @@ pipeline {
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} 'cd ${DEPLOY_DIR} && unzip -o ${ZIP_FILE_NAME} && npm install && npm start &'"
                 }
             }
-        }
-        post {
-            always {
-            input "Deploy to Production?"
+
+            post {
+                always {
+                input "Deploy to Production?"
+                }
             }
         }
-
         stage('Deploy to Production Environment') {
             steps {
                 echo("Deploy to production environment here")
