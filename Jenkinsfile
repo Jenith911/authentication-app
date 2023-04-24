@@ -12,7 +12,6 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'npm install'
-                sh 'npm run build'
             }
         }
     
@@ -23,6 +22,10 @@ pipeline {
         }
         stage('Deploy to Test Environment') {
             steps {
+                withCredentials([usernamePassword(credentialsId: 'AWS-Credential', usernameVariable: 'ACCESS_KEY', passwordVariable: 'SECRET_KEY')]) {
+                    sh 'sed -i '/accessKeyId/c\accessKeyId=$ACCESS_KEY' .env'
+                    sh 'sed -i '/secretAccessKey/c\secretAccessKey=$SECRET_KEY' .env'
+                }
                 sshagent(['nodejs-server-key']) {
                     sh "scp ${ZIP_FILE_NAME} ${REMOTE_USER}@${REMOTE_HOST}:${DEPLOY_DIR}"
                     sh "ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} 'cd ${DEPLOY_DIR} && unzip -o ${ZIP_FILE_NAME} && npm install && npm start &'"

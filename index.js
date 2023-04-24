@@ -3,17 +3,20 @@ const session = require('express-session');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const AWS = require('aws-sdk');
+const bodyParser = require('body-parser');
+require('dotenv').config();
 
-AWS.config.update({
-    accessKeyId: process.env.accessKeyId,
-    secretAccessKey:  process.env.secretAccessKey,
-    region: 'ap-south-1'
-  });
-const s3 = new AWS.S3();
+const s3 = new AWS.S3({
+  accessKeyId: process.env.accessKeyId,
+  secretAccessKey:  process.env.secretAccessKey,
+  region: 'ap-south-1'
+});
 
 const app = express();
 const port = 3000;
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 // Set up session middleware
 app.use(session({
     secret: 'mysecretkey',
@@ -72,15 +75,17 @@ app.get('/login', (req, res) => {
   
 // configure multer middleware
 const upload = multer({
-    storage: multerS3({
-      s3: s3,
-      bucket: 'YOUR_S3_BUCKET_NAME',
-      contentType: multerS3.AUTO_CONTENT_TYPE,
-      key: function (req, file, cb) {
-        cb(null, file.originalname);
-      },
-    }),
-  });
+  storage: multerS3({
+    s3: s3,
+    bucket: 'eyepax-app-bucket',
+    metadata: function (req, file, cb) {
+      cb(null, {fieldName: file.fieldname});
+    },
+    key: function (req, file, cb) {
+      cb(null, Date.now().toString())
+    }
+  })
+});
   
   // endpoint to handle image upload
   app.post('/upload', upload.single('image'), (req, res) => {
